@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Upload Blog Post</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 40px;
+      }
+      form {
+        max-width: 600px;
+      }
+      input,
+      textarea {
+        width: 100%;
+        margin: 10px 0;
+        padding: 10px;
+      }
+      button {
+        padding: 12px 20px;
+        background: #007bff;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      #preview {
+        max-width: 400px;
+        margin-top: 10px;
+        display: none;
+      }
+      #status {
+        margin-top: 15px;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Create New Blog Post</h1>
+
+    <form id="postForm">
+      <input type="text" id="title" placeholder="Post Title" required /><br />
+
+      <textarea
+        id="content"
+        rows="8"
+        placeholder="Write your blog content here..."
+        required
+      ></textarea
+      ><br />
+
+      <input
+        type="text"
+        id="category"
+        placeholder="Category (e.g. Technology, Travel)"
+        required
+      /><br />
+
+      <label>Select Featured Image:</label><br />
+      <input type="file" id="image" accept="image/*" required /><br />
+
+      <img id="preview" alt="Image Preview" /><br />
+
+      <button type="submit">Upload Post</button>
+    </form>
+
+    <div id="status"></div>
+
+    <script>
+      const form = document.getElementById("postForm");
+      const imageInput = document.getElementById("image");
+      const preview = document.getElementById("preview");
+      const status = document.getElementById("status");
+
+      // Image Preview
+      imageInput.addEventListener("change", () => {
+        const file = imageInput.files[0];
+        if (file) {
+          preview.src = URL.createObjectURL(file);
+          preview.style.display = "block";
+        }
+      });
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        const formData = new FormData();
+        formData.append("title", document.getElementById("title").value);
+        formData.append("content", document.getElementById("content").value);
+        formData.append("category", document.getElementById("category").value);
+        formData.append("image", imageInput.files[0]);
+
+        status.textContent = "Uploading...";
+        status.style.color = "blue";
+
+        try {
+          const res = await fetch("/api/posts", {
+            method: "POST",
+            body: formData,
+          });
+
+          const data = await res.json();
+
+          if (res.ok) {
+            status.textContent = "✅ Post uploaded successfully!";
+            status.style.color = "green";
+            form.reset();
+            preview.style.display = "none";
+          } else {
+            status.textContent = "❌ Error: " + data.message;
+            status.style.color = "red";
+          }
+        } catch (err) {
+          status.textContent = "❌ Upload failed: " + err.message;
+          status.style.color = "red";
+        }
+      });
+    </script>
+  </body>
+</html>
