@@ -36,24 +36,33 @@ const JWT_SECRET = process.env["JWT_SECRET"] || "secret";
 export const register = async (req: Request, res: Response) => {
   try {
     const { email, username, password, role } = req.body;
-    
+
     // Check if user exists
-    const existing = await db.select().from(users).where(eq(users.email, email));
-    if (existing.length) return res.status(400).json({ message: "User already exists" });
+    const existing = await db
+      .select()
+      .from(users)
+      .where(eq(users.email, email));
+    if (existing.length)
+      return res.status(400).json({ message: "User already exists" });
 
     const passwordHash = await bcrypt.hash(password, 10);
-    const result = await db.insert(users).values({
-      email,
-      username,
-      passwordHash,
-      role: role === "ADMIN" ? "ADMIN" : "USER"
-    }).returning();
+    const result = await db
+      .insert(users)
+      .values({
+        email,
+        username,
+        passwordHash,
+        role: role === "ADMIN" ? "ADMIN" : "USER",
+      })
+      .returning();
     const user = result[0];
     if (!user) return res.status(500).json({ message: "User creation failed" });
 
-    res.status(201).json({ user: { id: user.id, email: user.email, role: user.role } });
+    return res
+      .status(201)
+      .json({ user: { id: user.id, email: user.email, role: user.role } });
   } catch (err) {
-    res.status(500).json({ message: (err as Error).message });
+    return res.status(500).json({ message: (err as Error).message });
   }
 };
 
@@ -82,16 +91,25 @@ export const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
     const result = await db.select().from(users).where(eq(users.email, email));
-    if (!result.length) return res.status(401).json({ message: "Invalid credentials" });
+    if (!result.length)
+      return res.status(401).json({ message: "Invalid credentials" });
 
     const user = result[0];
     if (!user) return res.status(401).json({ message: "Invalid credentials" });
-    
-    const isMatch = await bcrypt.compare(password, user.passwordHash);
-    if (!isMatch) return res.status(401).json({ message: "Invalid credentials" });
 
-    const token = jwt.sign({ id: user.id, email: user.email, role: user.role }, JWT_SECRET, { expiresIn: "1d" });
-    return res.json({ token, user: { id: user.id, email: user.email, role: user.role } });
+    const isMatch = await bcrypt.compare(password, user.passwordHash);
+    if (!isMatch)
+      return res.status(401).json({ message: "Invalid credentials" });
+
+    const token = jwt.sign(
+      { id: user.id, email: user.email, role: user.role },
+      JWT_SECRET,
+      { expiresIn: "1d" },
+    );
+    return res.json({
+      token,
+      user: { id: user.id, email: user.email, role: user.role },
+    });
   } catch (err) {
     return res.status(500).json({ message: (err as Error).message });
   }
