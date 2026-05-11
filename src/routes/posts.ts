@@ -1,7 +1,5 @@
 import express from "express";
 
-export const router = express.Router();
-
 import { uploadSingle } from "../middleware/upload.js";
 import { uploadToCloudinary } from "../controllers/upload-controller.js";
 
@@ -32,14 +30,16 @@ import { uploadToCloudinary } from "../controllers/upload-controller.js";
  *       201:
  *         description: Post created successfully
  */
-router.post(
+export const postsRouter = express.Router();
+
+postsRouter.post(
   "/",
   uploadSingle, // Multer middleware
   uploadToCloudinary, // Cloudinary upload
   async (req, res) => {
     try {
-      const imageUrl = req.cloudinaryResult?.secure_url;
-      const imagePublicId = req.cloudinaryResult?.public_id;
+      const imageUrl = (req as any).cloudinaryResult?.secure_url;
+      const imagePublicId = (req as any).cloudinaryResult?.public_id;
 
       const postData = {
         // title: req.body.title,
@@ -60,7 +60,7 @@ router.post(
         imageUrl,
       });
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      res.status(500).json({ message: (error as Error).message });
     }
   },
 );

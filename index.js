@@ -61,17 +61,11 @@ app.get("/api/health", (req, res) => {
 
 const swaggerDocs = swaggerJSDoc(swaggerOptions);
 
-const isSwaggerEnabled =
-  process.env.SWAGGER_ENABLED === "true" ||
-  process.env.NODE_ENV !== "production";
-
-if (isSwaggerEnabled) {
-  console.log(" Env", process.env.HELLO_ENV);
-  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-}
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Sample route
 app.get("/api/hello", (req, res) => {
+  const token = req.headers["authorization"].split(" ");
   res.send("Hello World!");
 });
 
