@@ -6,12 +6,13 @@ import swaggerUi from "swagger-ui-express";
 import cors from "cors";
 
 import { authRouter } from "./routes/auth.js";
+import { usersRouter } from "./routes/users.js";
 import { blogsRouter } from "./routes/blogs.js";
 import { categoriesRouter } from "./routes/categories.js";
 import { tagsRouter } from "./routes/tags.js";
 import { commentsRouter } from "./routes/comments.js";
 import { postsRouter } from "./routes/posts.js";
-
+import { uploadRouter } from "./routes/upload.js";
 
 dotenv.config();
 
@@ -52,14 +53,16 @@ const swaggerOptions = {
 const swaggerDocs = swaggerJSDoc(swaggerOptions);
 app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
+app.get;
 // Routes
 app.use("/auth", authRouter);
+app.use("/api/users", usersRouter);
 app.use("/api/blogs", blogsRouter);
 app.use("/api/categories", categoriesRouter);
 app.use("/api/tags", tagsRouter);
 app.use("/api/comments", commentsRouter);
 app.use("/api/posts", postsRouter);
-
+app.use("/api/upload", uploadRouter);
 
 /**
  * @swagger

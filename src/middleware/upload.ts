@@ -21,4 +21,7 @@ const upload = multer({
 });
 
 // Single image upload middleware
-export const uploadSingle = upload.single("image"); // 'image' is the field name from frontend
+export const uploadSingle = upload.single("image");
+
+// Multiple images upload middleware (max 10)
+export const uploadMultiple = upload.array("images", 10);

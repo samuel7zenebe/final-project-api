@@ -1,7 +1,8 @@
-import express from "express";
-
+import { Router } from "express";
 import { uploadSingle } from "../middleware/upload.js";
-import { uploadToCloudinary } from "../controllers/upload-controller.js";
+import { cloudinaryUploadStream } from "../controllers/upload-controller.js";
+
+export const postsRouter = Router();
 
 /**
  * @swagger
@@ -9,6 +10,8 @@ import { uploadToCloudinary } from "../controllers/upload-controller.js";
  *   post:
  *     summary: Create a new blog post with featured image
  *     tags: [Posts]
+ *     security:
+ *       - bearerAuth: []
  *     consumes:
  *       - multipart/form-data
  *     requestBody:
@@ -30,37 +33,34 @@ import { uploadToCloudinary } from "../controllers/upload-controller.js";
  *       201:
  *         description: Post created successfully
  */
-export const postsRouter = express.Router();
-
-postsRouter.post(
-  "/",
-  uploadSingle, // Multer middleware
-  uploadToCloudinary, // Cloudinary upload
-  async (req, res) => {
-    try {
-      const imageUrl = (req as any).cloudinaryResult?.secure_url;
-      const imagePublicId = (req as any).cloudinaryResult?.public_id;
-
-      const postData = {
-        // title: req.body.title,
-        // content: req.body.content,
-        // category: req.body.category,
-        featuredImage: imageUrl,
-        imagePublicId: imagePublicId,
-        // author: req.user.id, // from auth middleware
-      };
-
-      // Save to database...
-      // const post = await Post.create(postData);
-      console.log(postData);
-
-      res.status(201).json({
-        message: "Post created successfully",
-        // post,
-        imageUrl,
-      });
-    } catch (error) {
-      res.status(500).json({ message: (error as Error).message });
+postsRouter.post("/", uploadSingle, async (req, res) => {
+  try {
+    if (!req.file) {
+      res.status(400).json({ message: "Image is required" });
+      return;
     }
-  },
-);
+
+    const result = await cloudinaryUploadStream(req.file.buffer, "blog_covers");
+
+    const postData = {
+      // TODO: Map other fields from req.body
+      // title: req.body.title,
+      // content: req.body.content,
+      // category: req.body.category,
+      featuredImageUrl: result.secure_url,
+      featuredImagePublicId: result.public_id,
+      // authorId: req.user?.id,
+    };
+
+    console.log("Post data:", postData);
+
+    res.status(201).json({
+      message: "Post created successfully",
+      // post: postData,
+      imageUrl: result.secure_url,
+    });
+  } catch (error) {
+    console.error("Post creation error:", error);
+    res.status(500).json({ message: (error as Error).message });
+  }
+});
